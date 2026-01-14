@@ -37,6 +37,7 @@ map/label.cpp
 map/location.cpp
 map/map.cpp
 minimap.cpp
+ollama.cpp
 pathfind/astarsearch.cpp
 pathutils.cpp
 quit_confirmation.cpp

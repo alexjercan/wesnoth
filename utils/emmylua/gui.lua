@@ -45,6 +45,18 @@ function gui.show_menu(items, initial, markup) end
 ---@return string
 function gui.show_narration(attributes, options, text_input) end
 
+---Shows a message dialog using Ollama.
+---@param attributes gui_narration_params
+---@param options? string[]|gui_narration_option_info[]
+---@param text_input? gui_narration_text_params
+---@return integer
+---| '-2' #User pressed Escape to close the message
+---| '-1' #User pressed Space or clicked the mouse to close the message
+---| '0' #If there is text input but no options
+---| '1+' #The index of the selected option
+---@return string
+function gui.show_ollama(attributes, options, text_input) end
+
 ---Show a simple popup dialog in the centre of the screen
 ---@param title tstring A title string for the dialog
 ---@param message tstring The message to show

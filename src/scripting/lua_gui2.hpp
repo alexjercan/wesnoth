@@ -27,6 +27,7 @@ namespace lua_gui2 {
 
 int intf_add_widget_definition(lua_State *L);
 int show_message_dialog(lua_State *L);
+int show_message_dialog_ollama(lua_State *L);
 int show_popup_dialog(lua_State *L);
 int switch_theme(lua_State* L);
 int show_menu(lua_State* L);
