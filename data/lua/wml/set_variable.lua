@@ -196,7 +196,21 @@ function wesnoth.wml_actions.ollama(cfg, variables)
 	local name = cfg.name or wml.error "trying to set a variable with an empty name"
 	if variables == nil then variables = wml.variables end
 
-	local prompt = cfg.prompt or wml.error "missing prompt= attribute in [ollama]"
+	local prompt = nil
+
+	if cfg.prompt ~= nil then -- check for nil because user may try to set a variable as false
+		prompt = cfg.prompt
+	end
+
+	if prompt == nil then
+		wml.error("No prompt provided for ollama action setting variable " .. name)
+		return
+	end
+
+	if type(prompt) ~= 'string' then
+		wml.error("Prompt for ollama action setting variable " .. name .. " is not a string")
+		return
+	end
 
 	local response = wesnoth.generate_ollama(prompt)
 
