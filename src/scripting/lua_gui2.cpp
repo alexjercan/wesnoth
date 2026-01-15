@@ -27,7 +27,6 @@
 #include "gui/dialogs/units_dialog.hpp"
 #include "gui/dialogs/wml_message.hpp"
 #include "gui/widgets/retval.hpp"
-#include "ollama.hpp"
 #include "scripting/lua_unit.hpp"
 #include "scripting/lua_unit_type.hpp"
 #include "scripting/lua_widget_methods.hpp" //intf_show_dialog
@@ -115,99 +114,6 @@ int show_message_dialog(lua_State* L)
 	const config& def_cfg = luaW_checkconfig(L, 1);
 	const std::string& title = def_cfg["title"];
 	const std::string& message = def_cfg["message"];
-
-	using portrait = gui2::dialogs::wml_message_portrait;
-	std::unique_ptr<portrait> left;
-	std::unique_ptr<portrait> right;
-	const bool is_double = def_cfg.has_attribute("second_portrait");
-	const bool left_side = def_cfg["left_side"].to_bool(true);
-	if(is_double || left_side) {
-		left.reset(new portrait {def_cfg["portrait"], def_cfg["mirror"].to_bool(false)});
-	} else {
-		// This means right side only.
-		right.reset(new portrait {def_cfg["portrait"], def_cfg["mirror"].to_bool(false)});
-	}
-	if(is_double) {
-		right.reset(new portrait {def_cfg["second_portrait"], def_cfg["second_mirror"].to_bool(false)});
-	}
-
-	int dlg_result = gui2::dialogs::show_wml_message(title, message, left.get(), right.get(), options, input);
-
-	if(!has_input && options.option_list.empty()) {
-		lua_pushinteger(L, dlg_result);
-	} else {
-		lua_pushinteger(L, options.chosen_option + 1);
-	}
-
-	if(has_input) {
-		lua_pushlstring(L, input.text.c_str(), input.text.length());
-	} else {
-		lua_pushnil(L);
-	}
-
-	return 2;
-}
-
-/**
- * Displays a message window using the input text as prompt for an LLM
- * - Arg 1: Table describing the window
- * - Arg 2: List of options (nil or empty table - no options)
- * - Arg 3: Text input specifications (nil or empty table - no text input)
- * - Ret 1: option chosen (if no options: 0 if there's text input, -2 if escape pressed, else -1)
- * - Ret 2: string entered (empty if none, nil if no text input)
- */
-int show_message_dialog_ollama(lua_State *L) {
-	config txt_cfg;
-	const bool has_input = !lua_isnoneornil(L, 3) && luaW_toconfig(L, 3, txt_cfg) && !txt_cfg.empty();
-
-	gui2::dialogs::wml_message_input input;
-	input.caption = txt_cfg["label"].str();
-	input.text = txt_cfg["text"].str();
-	input.maximum_length = txt_cfg["max_length"].to_int(256);
-	input.text_input_was_specified = has_input;
-
-	gui2::dialogs::wml_message_options options{};
-	if(!lua_isnoneornil(L, 2)) {
-		luaL_checktype(L, 2, LUA_TTABLE);
-		std::size_t n = lua_rawlen(L, 2);
-		for(std::size_t i = 1; i <= n; i++) {
-			lua_rawgeti(L, 2, i);
-			t_string short_opt;
-			config opt;
-			if(luaW_totstring(L, -1, short_opt)) {
-				opt["label"] = short_opt;
-			} else if(!luaW_toconfig(L, -1, opt)) {
-				std::ostringstream error;
-				error << "expected array of config and/or translatable strings, but index ";
-				error << i << " was a " << lua_typename(L, lua_type(L, -1));
-				return luaL_argerror(L, 2, error.str().c_str());
-			}
-			gui2::dialogs::wml_message_option option(opt["label"], opt["description"], opt["image"]);
-			if(opt["default"].to_bool(false)) {
-				options.chosen_option = i - 1;
-			}
-			options.option_list.push_back(option);
-			lua_pop(L, 1);
-		}
-		lua_getfield(L, 2, "default");
-		if(lua_isnumber(L, -1)) {
-			int i = lua_tointeger(L, -1);
-			if(i < 1 || std::size_t(i) > n) {
-				std::ostringstream error;
-				error << "default= key in options list is not a valid option index (1-" << n << ")";
-				return luaL_argerror(L, 2, error.str().c_str());
-			}
-			options.chosen_option = i - 1;
-		}
-		lua_pop(L, 1);
-	}
-
-	const config& def_cfg = luaW_checkconfig(L, 1);
-	const std::string& title = def_cfg["title"];
-	const std::string& prompt = def_cfg["message"];
-
-	ollama llm;
-	std::string message = llm.generate(prompt);
 
 	using portrait = gui2::dialogs::wml_message_portrait;
 	std::unique_ptr<portrait> left;
@@ -496,7 +402,6 @@ int luaW_open(lua_State* L)
 	static luaL_Reg const gui_callbacks[] = {
 		{ "show_menu",              &show_menu },
 		{ "show_narration",         &show_message_dialog },
-		{ "show_ollama",            &show_message_dialog_ollama },
 		{ "show_popup",             &show_popup_dialog },
 		{ "show_story",             &show_story },
 		{ "show_prompt",            &show_message_box },

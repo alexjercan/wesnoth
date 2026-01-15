@@ -35,6 +35,7 @@
 #include "scripting/lua_cpp_function.hpp"
 #include "scripting/lua_fileops.hpp"
 #include "scripting/lua_formula_bridge.hpp"
+#include "scripting/lua_ollama_bridge.hpp"
 #include "scripting/lua_gui2.hpp"
 #include "scripting/lua_wml.hpp"
 #include "scripting/lua_stringx.hpp"
@@ -819,6 +820,7 @@ lua_kernel_base::lua_kernel_base()
 		{ "kernel_type",              &dispatch<&lua_kernel_base::intf_kernel_type>          },
 		{ "compile_formula",          &lua_formula_bridge::intf_compile_formula},
 		{ "eval_formula",             &lua_formula_bridge::intf_eval_formula},
+		{ "generate_ollama",          &lua_ollama_bridge::intf_generate_ollama},
 		{ "name_generator",           &intf_name_generator           },
 		{ "named_tuple",              &intf_named_tuple              },
 		{ "log",                      &intf_log                      },

@@ -95,6 +95,11 @@ function wesnoth.compile_formula(formula) end
 ---@return any
 function wesnoth.eval_formula(formula, variables) end
 
+---Generates a string message using Ollama.
+---@param prompt string A prompt to send to Ollama.
+---@return string
+function wesnoth.generate_ollama(prompt) end
+
 ---Represents an arbitrary version number.
 ---@class version
 ---@field major integer The major revision number (index 1)

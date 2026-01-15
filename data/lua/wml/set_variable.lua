@@ -191,3 +191,14 @@ function wesnoth.wml_actions.set_variable(cfg, variables)
 		variables[name] = string_to_join
 	end
 end
+
+function wesnoth.wml_actions.ollama(cfg, variables)
+	local name = cfg.name or wml.error "trying to set a variable with an empty name"
+	if variables == nil then variables = wml.variables end
+
+	local prompt = cfg.prompt or wml.error "missing prompt= attribute in [ollama]"
+
+	local response = wesnoth.generate_ollama(prompt)
+
+	variables[name] = response
+end
