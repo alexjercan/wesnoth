@@ -20,14 +20,16 @@
 /**
  * Generates text using Ollama LLM.
  * - Arg 1: Prompt text as a string
+ * - Arg 2: Model name as a string
  * - Ret 1: Generated text as a string
  */
 int lua_ollama_bridge::intf_generate_ollama(lua_State* L)
 {
 	const std::string prompt = luaL_checkstring(L, 1);
+	const std::string model = luaL_checkstring(L, 2);
 
 	ollama llm;
-	std::string message = llm.generate(prompt);
+	std::string message = llm.generate(prompt, model);
 
 	lua_pushlstring(L, message.c_str(), message.size());
 	return 1;

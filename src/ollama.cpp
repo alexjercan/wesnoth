@@ -18,12 +18,37 @@ std::string parseResponse(const std::string& response) {
     return response.substr(start, end - start);
 }
 
+std::string escapeJson(const std::string &s) {
+    std::string result;
+    for (char c : s) {
+        switch (c) {
+            case '\"': result += "\\\""; break;
+            case '\\': result += "\\\\"; break;
+            case '\n': result += "\\n"; break;
+            case '\r': result += "\\r"; break;
+            case '\t': result += "\\t"; break;
+            default: result += c; break;
+        }
+    }
+    return result;
+}
+
+std::string unescapeNewlines(std::string s) {
+    size_t pos = 0;
+    while ((pos = s.find("\\n", pos)) != std::string::npos) {
+        s.replace(pos, 2, "\n");
+        pos += 1; // move past the newly inserted newline
+    }
+    return s;
+}
+
 std::string ollama::generate(const std::string& prompt, const std::string& model) {
     CURL* curl = curl_easy_init();
     std::string readBuffer;
 
     if(curl) {
-        std::string jsonPayload = R"({"model":")" + model + R"(","prompt":")" + prompt + R"(","stream":false})";
+		std::string escapedPrompt = escapeJson(prompt);
+		std::string jsonPayload = R"({"model":")" + model + R"(","prompt":")" + escapedPrompt + R"(","stream":false})";
 
         curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:11434/api/generate");
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonPayload.c_str());
@@ -46,5 +71,6 @@ std::string ollama::generate(const std::string& prompt, const std::string& model
         curl_easy_cleanup(curl);
     }
 
-	return parseResponse(readBuffer);
+	std::string llm_response = parseResponse(readBuffer);
+	return unescapeNewlines(llm_response);
 }

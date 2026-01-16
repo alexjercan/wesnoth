@@ -97,8 +97,9 @@ function wesnoth.eval_formula(formula, variables) end
 
 ---Generates a string message using Ollama.
 ---@param prompt string A prompt to send to Ollama.
+---@param model string The Ollama model to use.
 ---@return string
-function wesnoth.generate_ollama(prompt) end
+function wesnoth.generate_ollama(prompt, model) end
 
 ---Represents an arbitrary version number.
 ---@class version
