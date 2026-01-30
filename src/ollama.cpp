@@ -10,12 +10,31 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* use
 }
 
 std::string parseResponse(const std::string& response) {
-    size_t start = response.find("\"response\":\"");
+    const std::string key = "\"response\":\"";
+    size_t start = response.find(key);
     if (start == std::string::npos) return "";
-    start += 12;
-    size_t end = response.find("\"", start);
-    if (end == std::string::npos) return "";
-    return response.substr(start, end - start);
+
+    start += key.length();
+    std::string result;
+    bool escape = false;
+
+    for (size_t i = start; i < response.size(); ++i) {
+        char c = response[i];
+
+        if (escape) {
+            result += c;
+            escape = false;
+        } else if (c == '\\') {
+            escape = true;
+            result += c;
+        } else if (c == '"') {
+            break;
+        } else {
+            result += c;
+        }
+    }
+
+    return result;
 }
 
 std::string escapeJson(const std::string &s) {
@@ -33,13 +52,28 @@ std::string escapeJson(const std::string &s) {
     return result;
 }
 
-std::string unescapeNewlines(std::string s) {
-    size_t pos = 0;
-    while ((pos = s.find("\\n", pos)) != std::string::npos) {
-        s.replace(pos, 2, "\n");
-        pos += 1; // move past the newly inserted newline
+std::string unescapeJsonString(const std::string& s) {
+    std::string result;
+    result.reserve(s.size());
+
+    for (size_t i = 0; i < s.size(); ++i) {
+        if (s[i] == '\\' && i + 1 < s.size()) {
+            char next = s[i + 1];
+            switch (next) {
+                case 'n': result += '\n'; break;
+                case 'r': result += '\r'; break;
+                case 't': result += '\t'; break;
+                case '\\': result += '\\'; break;
+                case '"': result += '"'; break;
+                default: result += next; break;
+            }
+            ++i;
+        } else {
+            result += s[i];
+        }
     }
-    return s;
+
+    return result;
 }
 
 std::string ollama::generate(const std::string& prompt, const std::string& model) {
@@ -72,5 +106,5 @@ std::string ollama::generate(const std::string& prompt, const std::string& model
     }
 
 	std::string llm_response = parseResponse(readBuffer);
-	return unescapeNewlines(llm_response);
+	return unescapeJsonString(llm_response);
 }
